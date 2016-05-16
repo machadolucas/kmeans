@@ -37,15 +37,7 @@ function updateSvg(){
 	.attr("class", "dot");
 	dots.exit().remove();
 
-	//Centroides
-	var cents = svg.selectAll("circle.centroid").data(window.centroids);
-	cents.enter().append("circle");
-	cents.transition().duration(500)
-	.attr("transform", function(d){return "translate("+d.x+","+d.y+")"})
-	.attr("r", "5")
-	.attr("class", "centroid");
-	cents.exit().remove();
-
+  //Linhas de relacionamentos
 	var lines = svg.selectAll("line.relation").data(window.relationLines);
 	lines.enter().append("line");
 	lines.attr("x1", function(d){return d.x1})
@@ -54,6 +46,15 @@ function updateSvg(){
 	.attr("y2", function(d){return d.y2})
 	.attr("class", "relation");
 	lines.exit().remove();
+
+	//Centroides
+	var cents = svg.selectAll("circle.centroid").data(window.centroids);
+	cents.enter().append("circle");
+	cents.transition().duration(500)
+	.attr("transform", function(d){return "translate("+d.x+","+d.y+")"})
+	.attr("r", "5")
+	.attr("class", "centroid");
+	cents.exit().remove();
 }
 
 var hasStarted = false;
@@ -68,6 +69,7 @@ function stepAlgorithm(){
 	processControls();
 	kMeans(function(){});
   processControls();
+  updateSvg();
 }
 
 function playAlgorithm(){
@@ -133,7 +135,6 @@ function generateRandomCentroids(){
 		p = {x: coordX, y: coordY, points:[] }
 		window.centroids[i] = p;
 	}
-	updateSvg();
 }
 
 function kMeans(callback){
