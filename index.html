@@ -12,6 +12,14 @@
 	<div id="content">
 		<header>
 			<h1>K-means simulator</h1>
+			<div>
+				<p>1_ Create the points by clicking over the area.</p>
+				<p>2_ Choose the amount of clusters you want to form below.</p>
+				<p>3_ Click in the "Step" button to iterate over the algorithm.
+					<br/>When the algorithm is established, it stops.
+					<br/>You can create new points between the iterations. That will require new steps to establish.</p>
+				<p>*_ Click "Reset" to clear everything and start again.</p>
+			</div>
 			<nav>
 				<label for="clustersAmount">Clusters amount:</label>
 				<input id="clustersAmount" type="number" min="2" max="32" value="2"/>
@@ -19,9 +27,6 @@
 					<li>
 						<button id="stepBtn" onclick="stepAlgorithm()">Step</button>
 					</li>
-					<!-- <li>
-						<button id="playBtn" onclick="playAlgorithm()">Play</button>
-					</li> -->
 					<li>
 						<button id="resetBtn" onclick="resetAlgorithm()">Reset</button>
 					</li>

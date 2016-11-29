@@ -8,46 +8,54 @@ areaX = 600;
 areaY = 500;
 
 svg = d3.select("#vis").append("svg")
-                       .attr("width", areaX)
-                       .attr("height", areaY)
+					   .attr("width", areaX)
+					   .attr("height", areaY)
 											 .attr("class", "active")
-                       .on("mousedown", createDot);
+					   .on("mousedown", createDot);
 
 function createDot(){
-		// Ignore the click event if it was suppressed
-		if (d3.event.defaultPrevented) return;
+	// Ignore the click event if it was suppressed
+	if (d3.event.defaultPrevented) return;
 
-		// Extract the click location\
-		var point = d3.mouse(this), p = {x: point[0], y: point[1] };
+	// Extract the click location\
+	var point = d3.mouse(this)
+	var p = {x: point[0], y: point[1], idp: window.points.length };
 
-		points[points.length] = p;
+	window.points[window.points.length] = p;
 
-    established = false;
+	established = false;
 
-    processControls()
-		updateSvg();
+	processControls()
+	updateDots();
 }
 
-function updateSvg(){
-	//Pontos
+function updateDots(){
 	var dots = svg.selectAll("circle.dot").data(window.points);
 	dots.enter().append("circle");
 	dots.attr("transform", function(d){return "translate("+d.x+","+d.y+")"})
 	.attr("r", "3")
 	.attr("class", "dot");
 	dots.exit().remove();
-
-  //Linhas de relacionamentos
+}
+function updateRelationLines(){
 	var lines = svg.selectAll("line.relation").data(window.relationLines);
 	lines.enter().append("line");
-	lines.attr("x1", function(d){return d.x1})
-	.attr("y1", function(d){return d.y1})
-	.attr("x2", function(d){return d.x2})
-	.attr("y2", function(d){return d.y2})
+	lines.attr({
+		x1: function(d){return d.x1},
+		y1: function(d){return d.y1},
+		x2: function(d){return d.x1},
+		y2: function(d){return d.y1}
+	})
+	.transition()
+	.duration(500)
+	.attr({
+		x2: function(d){return d.x2},
+		y2: function(d){return d.y2}
+	})
 	.attr("class", "relation");
 	lines.exit().remove();
-
-	//Centroides
+}
+function updateCentroids(){
 	var cents = svg.selectAll("circle.centroid").data(window.centroids);
 	cents.enter().append("circle");
 	cents.transition().duration(500)
@@ -55,50 +63,40 @@ function updateSvg(){
 	.attr("r", "5")
 	.attr("class", "centroid");
 	cents.exit().remove();
+
+	setTimeout(function(){
+		updateRelationLines();
+	}, 1000);
+	
 }
 
 var hasStarted = false;
-var isPlaying = false;
 var established = false;
 
 function stepAlgorithm(){
 	if(!window.hasStarted){
 		generateRandomCentroids();
+		window.hasStarted = true;
+		processControls();
+		updateCentroids();
+	} else {
+		finished = kMeansLoop();
+		processControls();	
 	}
-	window.hasStarted = true;
-	processControls();
-	kMeans(function(){});
-  processControls();
-  updateSvg();
 }
 
-function playAlgorithm(){
-	if(!window.hasStarted){
-		generateRandomCentroids();
-	}
-	window.hasStarted = true;
-	if(window.isPlaying){
-		window.isPlaying = false;
-	} else {
-		window.isPlaying = true;
-		processControls();
-		kMeans(function(){
-			window.isPlaying = false;
-			processControls();
-		});
-	}
-	processControls();
-}
 
 function resetAlgorithm(){
 	window.hasStarted = false;
 	window.points = [];
 	window.centroids = [];
 	window.lastCentroids = [];
-	window.relationLines = []
+	window.relationLines = [];
 	d3.select("#clustersAmount").property("value","2");
 
-	updateSvg();
+	updateDots();
+	updateCentroids();
+
 	processControls();
 }
 
@@ -118,11 +116,11 @@ function processControls(){
 			d3.select("#playBtn").text("Play");
 	}
   if (established) {
-    d3.select("#established").attr("class", null);
-    d3.select("#established").text("Established!");
+	d3.select("#established").attr("class", null);
+	d3.select("#established").text("Established!");
   } else {
-    d3.select("#established").attr("class", "not");
-    d3.select("#established").text("Not Established!");
+	d3.select("#established").attr("class", "not");
+	d3.select("#established").text("Not Established!");
   }
 }
 
@@ -132,35 +130,11 @@ function generateRandomCentroids(){
 	for (var i = 0; i < amount; i++) {
 		coordX = Math.floor(Math.random() * window.areaX);
 		coordY = Math.floor(Math.random() * window.areaY);
-		p = {x: coordX, y: coordY, points:[] }
+		p = {x: coordX, y: coordY, idc: i, points:[] }
 		window.centroids[i] = p;
 	}
 }
 
-function kMeans(callback){
-
-	if (isPlaying) { //Playing
-
-		var finished = false;
-		while (!finished) {
-			stopped = kMeansLoop();
-			updateSvg();
-			if (stopped) {
-				finished = true;
-			}
-		}
-
-	} else { //By steps
-
-		stopped = kMeansLoop();
-		updateSvg();
-		if (stopped) {
-			finished = true;
-		}
-	}
-	callback();
-
-}
 
 function kMeansLoop(){
 
@@ -200,6 +174,7 @@ function kMeansLoop(){
 		}
 	}
 
+
 	// Calcula a distancia total entre os centroides novos e os antigos.
 	var distance = 0;
 	for (var c = 0; c < window.centroids.length; c++) {
@@ -207,16 +182,18 @@ function kMeansLoop(){
 		distance += between;
 	}
 
+
 	// Se for zero, os centroides estao no lugar certo e final.
 	if (distance == 0) {
-    window.established = true;
+		window.established = true;
 		return true;
 	} else {
-    window.established = false;
-		relationLines = [];
+		window.established = false;
+		window.relationLines = [];
+
 		for (var c = 0; c < window.centroids.length; c++) {
 			for (var i = 0; i < window.centroids[c].points.length; i++) {
-				relationLines.push({
+				window.relationLines.push({
 					x1 : window.centroids[c].x,
 					y1 : window.centroids[c].y,
 					x2 : window.centroids[c].points[i].x,
@@ -224,6 +201,9 @@ function kMeansLoop(){
 				});
 			}
 		}
+
+		updateCentroids();
+			
 		return false;
 	}
 }
