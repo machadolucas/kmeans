@@ -41,16 +41,16 @@ function updateRelationLines(){
 	var lines = svg.selectAll("line.relation").data(window.relationLines);
 	lines.enter().append("line");
 	lines.attr({
-		x1: function(d){return d.x1},
-		y1: function(d){return d.y1},
-		x2: function(d){return d.x1},
-		y2: function(d){return d.y1}
+		x1: function(d){return d.x2},
+		y1: function(d){return d.y2},
+		x2: function(d){return d.x2},
+		y2: function(d){return d.y2}
 	})
 	.transition()
 	.duration(500)
 	.attr({
-		x2: function(d){return d.x2},
-		y2: function(d){return d.y2}
+		x1: function(d){return d.x1},
+		y1: function(d){return d.y1}
 	})
 	.attr("class", "relation");
 	lines.exit().remove();
